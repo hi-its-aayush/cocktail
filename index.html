@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beverage Proposal — PwC Partner Welcome Reception</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+  :root{
+    --espresso:#17110C;
+    --walnut:#241A12;
+    --amber:#C98A3D;
+    --copper:#A9683A;
+    --cream:#EFE6D8;
+    --raspberry:#C2455E;
+    --muted:#8C7B66;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--espresso);
+    color:var(--cream);
+    font-family:'Outfit',sans-serif;
+    font-weight:300;
+    line-height:1.6;
+    overflow-x:hidden;
+  }
+  ::selection{background:var(--amber);color:var(--espresso)}
+
+  /* ---------- NAV ---------- */
+  nav{
+    position:fixed;top:0;left:0;right:0;z-index:100;
+    display:flex;justify-content:space-between;align-items:center;
+    padding:1.1rem 2.5rem;
+    background:linear-gradient(to bottom, rgba(23,17,12,.92), rgba(23,17,12,0));
+    backdrop-filter:blur(4px);
+  }
+  .nav-brand{font-family:'Cormorant Garamond',serif;font-size:1.15rem;letter-spacing:.14em;text-transform:uppercase;color:var(--cream)}
+  .nav-brand span{color:var(--amber)}
+  .nav-links{display:flex;gap:1.8rem}
+  .nav-links a{color:var(--muted);text-decoration:none;font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;transition:color .25s}
+  .nav-links a:hover,.nav-links a:focus-visible{color:var(--amber)}
+  a:focus-visible,button:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+
+  /* ---------- HERO ---------- */
+  .hero{
+    min-height:100vh;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    align-items:center;
+    max-width:1280px;margin:0 auto;
+    padding:6rem 2.5rem 3rem;
+    gap:2rem;
+  }
+  .hero-copy .eyebrow{
+    font-size:.75rem;letter-spacing:.28em;text-transform:uppercase;color:var(--amber);
+    display:flex;align-items:center;gap:.8rem;margin-bottom:1.6rem;
+  }
+  .hero-copy .eyebrow::before{content:"";width:34px;height:1px;background:var(--amber)}
+  h1{
+    font-family:'Cormorant Garamond',serif;font-weight:500;
+    font-size:clamp(2.6rem,5.2vw,4.4rem);
+    line-height:1.05;letter-spacing:.01em;margin-bottom:1.4rem;
+  }
+  h1 em{font-style:italic;color:var(--amber)}
+  .hero-copy p{max-width:44ch;color:var(--muted);font-size:1.02rem;margin-bottom:2.2rem}
+  .hero-ctas{display:flex;gap:1rem;flex-wrap:wrap}
+  .btn{
+    font-family:'Outfit',sans-serif;font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;
+    padding:.85rem 1.7rem;cursor:pointer;transition:all .25s;text-decoration:none;display:inline-block;
+  }
+  .btn-solid{background:var(--amber);color:var(--espresso);border:1px solid var(--amber);font-weight:500}
+  .btn-solid:hover{background:var(--cream);border-color:var(--cream)}
+  .btn-ghost{background:transparent;color:var(--cream);border:1px solid rgba(239,230,216,.3)}
+  .btn-ghost:hover{border-color:var(--amber);color:var(--amber)}
+
+  .hero-3d{position:relative;height:70vh;min-height:420px}
+  #glassCanvas{width:100%;height:100%;display:block;cursor:grab}
+  #glassCanvas:active{cursor:grabbing}
+  .canvas-hint{
+    position:absolute;bottom:.6rem;left:50%;transform:translateX(-50%);
+    font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);
+    white-space:nowrap;
+  }
+  .drink-toggle{
+    position:absolute;top:.5rem;left:50%;transform:translateX(-50%);
+    display:flex;gap:.5rem;background:rgba(36,26,18,.7);border:1px solid rgba(239,230,216,.12);
+    padding:.35rem;border-radius:2rem;backdrop-filter:blur(6px);
+  }
+  .drink-toggle button{
+    font-family:'Outfit',sans-serif;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;
+    background:transparent;border:none;color:var(--muted);padding:.5rem 1.1rem;border-radius:2rem;cursor:pointer;transition:all .25s;
+  }
+  .drink-toggle button.active{background:var(--amber);color:var(--espresso);font-weight:500}
+
+  /* ---------- SECTIONS ---------- */
+  section{max-width:1280px;margin:0 auto;padding:5.5rem 2.5rem}
+  .section-label{
+    font-size:.72rem;letter-spacing:.3em;text-transform:uppercase;color:var(--amber);margin-bottom:.9rem;
+  }
+  h2{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:clamp(1.9rem,3.4vw,2.8rem);line-height:1.12;margin-bottom:1rem}
+  .lead{color:var(--muted);max-width:62ch;margin-bottom:2.5rem}
+
+  .drink-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:3.5rem;align-items:start}
+  .drink-panel{
+    background:var(--walnut);border:1px solid rgba(239,230,216,.08);
+    padding:2.2rem;position:relative;
+  }
+  .drink-panel::before{
+    content:attr(data-accent);
+    position:absolute;top:0;left:2.2rem;transform:translateY(-50%);
+    background:var(--espresso);padding:.2rem .9rem;
+    font-size:.68rem;letter-spacing:.24em;text-transform:uppercase;color:var(--amber);
+    border:1px solid rgba(201,138,61,.4);
+  }
+  .drink-panel.raspberry::before{color:var(--raspberry);border-color:rgba(194,69,94,.45)}
+  .drink-panel h3{font-family:'Cormorant Garamond',serif;font-size:1.9rem;font-weight:500;margin-bottom:.35rem}
+  .glass-spec{font-size:.8rem;letter-spacing:.06em;color:var(--muted);margin-bottom:1.6rem;padding-bottom:1.2rem;border-bottom:1px solid rgba(239,230,216,.08)}
+  .glass-spec strong{color:var(--cream);font-weight:500}
+
+  .spec-table{width:100%;border-collapse:collapse;margin-bottom:1.6rem}
+  .spec-table td{padding:.55rem 0;font-size:.94rem;border-bottom:1px solid rgba(239,230,216,.06)}
+  .spec-table td:last-child{text-align:right;color:var(--amber);font-weight:400;white-space:nowrap}
+  .raspberry .spec-table td:last-child{color:var(--raspberry)}
+
+  .method{counter-reset:step}
+  .method li{
+    list-style:none;counter-increment:step;position:relative;
+    padding:.5rem 0 .5rem 2.4rem;font-size:.93rem;color:var(--cream);
+  }
+  .method li::before{
+    content:counter(step);
+    position:absolute;left:0;top:.55rem;
+    width:1.5rem;height:1.5rem;border:1px solid var(--copper);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:.72rem;color:var(--amber);
+  }
+  .callout{
+    margin-top:1.5rem;padding:1rem 1.2rem;font-size:.85rem;
+    background:rgba(201,138,61,.07);border-left:2px solid var(--amber);color:var(--cream);
+  }
+  .raspberry .callout{background:rgba(194,69,94,.07);border-left-color:var(--raspberry)}
+
+  .sensory{display:flex;flex-direction:column;gap:1.1rem}
+  .sensory-row{display:grid;grid-template-columns:78px 1fr;gap:1.2rem;align-items:baseline}
+  .sensory-row .k{font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+  .sensory-row .v{font-family:'Cormorant Garamond',serif;font-size:1.22rem;font-style:italic;color:var(--cream)}
+
+  /* backup + NA cards */
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:1.6rem}
+  .card{
+    background:var(--walnut);border:1px solid rgba(239,230,216,.08);padding:1.9rem;
+    transition:border-color .3s;
+  }
+  .card:hover{border-color:rgba(201,138,61,.35)}
+  .card h3{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:500;margin-bottom:.6rem}
+  .card p{font-size:.92rem;color:var(--muted)}
+  .badge{
+    display:inline-block;font-size:.64rem;letter-spacing:.2em;text-transform:uppercase;
+    padding:.28rem .7rem;margin-bottom:.9rem;border:1px solid;
+  }
+  .badge.ready{color:var(--amber);border-color:rgba(201,138,61,.4)}
+  .badge.open{color:var(--raspberry);border-color:rgba(194,69,94,.5)}
+
+  /* logistics */
+  .logi{display:grid;grid-template-columns:repeat(3,1fr);gap:1.6rem}
+  .logi-item{border-top:1px solid var(--copper);padding-top:1.2rem}
+  .logi-item h4{font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;color:var(--amber);margin-bottom:.6rem;font-weight:500}
+  .logi-item p{font-size:.9rem;color:var(--muted)}
+
+  /* recommendation */
+  .reco{
+    background:linear-gradient(135deg, var(--walnut), #1C130C);
+    border:1px solid rgba(201,138,61,.25);
+    padding:3rem;text-align:center;
+  }
+  .reco h2{margin-bottom:1.2rem}
+  .reco p{max-width:60ch;margin:0 auto 1.8rem;color:var(--muted)}
+  .lineup{display:flex;justify-content:center;gap:1rem;flex-wrap:wrap}
+  .lineup span{
+    font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;
+    padding:.6rem 1.2rem;border:1px solid rgba(239,230,216,.2);color:var(--cream);
+  }
+  .lineup span.na{border-style:dashed;color:var(--muted)}
+
+  footer{
+    max-width:1280px;margin:0 auto;padding:2.5rem;
+    display:flex;justify-content:space-between;align-items:center;
+    border-top:1px solid rgba(239,230,216,.07);
+    font-size:.75rem;letter-spacing:.1em;color:var(--muted);
+  }
+
+  .reveal{opacity:0;transform:translateY(26px);transition:opacity .7s ease,transform .7s ease}
+  .reveal.in{opacity:1;transform:none}
+  @media(prefers-reduced-motion:reduce){
+    .reveal{opacity:1;transform:none;transition:none}
+    html{scroll-behavior:auto}
+  }
+  @media(max-width:900px){
+    .hero{grid-template-columns:1fr;padding-top:5.5rem}
+    .hero-3d{height:52vh;order:-1}
+    .drink-grid{grid-template-columns:1fr}
+    .cards{grid-template-columns:1fr}
+    .logi{grid-template-columns:1fr}
+    .nav-links{display:none}
+    section{padding:3.5rem 1.4rem}
+    footer{flex-direction:column;gap:.6rem;text-align:center}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">PwC Sydney <span>· Partner Reception</span></div>
+  <div class="nav-links">
+    <a href="#signatures">Signatures</a>
+    <a href="#supporting">Supporting</a>
+    <a href="#logistics">Logistics</a>
+    <a href="#recommendation">Recommendation</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-copy">
+    <div class="eyebrow">Event Beverage Proposal</div>
+    <h1>Welcoming our <em>new partners</em>, one pour at a time.</h1>
+    <p>Two signature cocktails — a spirit-forward classic and a bright celebratory toast — built for elegant execution at volume. No gimmicks, no open flame, no bottlenecks.</p>
+    <div class="hero-ctas">
+      <a class="btn btn-solid" href="#signatures">View the menu</a>
+      <a class="btn btn-ghost" href="#recommendation">Skip to recommendation</a>
+    </div>
+  </div>
+  <div class="hero-3d">
+    <div class="drink-toggle" role="tablist" aria-label="Choose drink to preview">
+      <button id="btnOF" class="active" role="tab" aria-selected="true">Old Fashioned</button>
+      <button id="btnFM" role="tab" aria-selected="false">French Martini</button>
+    </div>
+    <canvas id="glassCanvas" aria-label="Interactive 3D preview of the cocktail glass"></canvas>
+    <div class="canvas-hint">Drag to rotate · Toggle drinks above</div>
+  </div>
+</header>
+
+<!-- SIGNATURES -->
+<section id="signatures">
+  <div class="section-label reveal">01 — Signature Serves</div>
+  <h2 class="reveal">The two drinks doing the talking</h2>
+  <p class="lead reveal">One dark, structured and traditional. One bright, silky and celebratory. Together they cover the room without slowing the bar.</p>
+
+  <div class="drink-grid">
+    <!-- OLD FASHIONED -->
+    <div class="drink-panel reveal" data-accent="Signature I">
+      <h3>Dark Rum Old Fashioned</h3>
+      <div class="glass-spec">Served in a <strong>stemless, rounded rocks glass</strong> — thick base, barrel silhouette. Not a straight-sided tumbler.</div>
+      <table class="spec-table">
+        <tr><td>Aged dark rum (Diplomático / Mount Gay)</td><td>60 ml</td></tr>
+        <tr><td>Demerara sugar syrup</td><td>7.5 ml</td></tr>
+        <tr><td>Angostura bitters</td><td>3 dashes</td></tr>
+        <tr><td>Orange peel — hand-expressed</td><td>1</td></tr>
+        <tr><td>Large clear ice cube</td><td>1</td></tr>
+      </table>
+      <ol class="method">
+        <li>Add syrup and bitters to the glass, pour in rum, stir to combine.</li>
+        <li>Add the large cube. Stir 20–30 seconds until chilled and lightly diluted.</li>
+        <li>Twist the orange peel over the surface to express the oils, then drop it in. No flame.</li>
+      </ol>
+      <div class="callout">Clean execution, ~60 seconds per serve. Deep caramel and molasses replace the standard whiskey backbone.</div>
+    </div>
+
+    <!-- FRENCH MARTINI -->
+    <div class="drink-panel raspberry reveal" data-accent="Signature II">
+      <h3>French Martini</h3>
+      <div class="glass-spec">Served in a <strong>classic V-shaped martini glass</strong> — cone bowl, long stem. Not a coupe.</div>
+      <table class="spec-table">
+        <tr><td>Vodka</td><td>45 ml</td></tr>
+        <tr><td>Chambord (black raspberry liqueur)</td><td>15 ml</td></tr>
+        <tr><td>Fresh pineapple juice</td><td>45 ml</td></tr>
+        <tr><td>Fresh raspberries — garnish</td><td>2–3</td></tr>
+      </table>
+      <ol class="method">
+        <li>Shake all ingredients hard with ice for 15–20 seconds — required to build the foam cap.</li>
+        <li>Double-strain into the chilled martini glass.</li>
+        <li>Float the raspberries on the foam.</li>
+      </ol>
+      <div class="callout">The foam is the show. Under 15 seconds of shaking, it collapses — shake time is non-negotiable at volume.</div>
+    </div>
+  </div>
+
+  <div style="margin-top:3rem" class="sensory reveal">
+    <div class="sensory-row"><div class="k">Sight</div><div class="v">Amber over crystal ice · blush pink under a silk-white cap</div></div>
+    <div class="sensory-row"><div class="k">Aroma</div><div class="v">Orange oil and molasses · raspberry over bright pineapple</div></div>
+    <div class="sensory-row"><div class="k">Taste</div><div class="v">Structured, earthy, slow · velvety, fruit-forward, celebratory</div></div>
+  </div>
+</section>
+
+<!-- SUPPORTING -->
+<section id="supporting">
+  <div class="section-label reveal">02 — Supporting Menu</div>
+  <h2 class="reveal">Depth without clutter</h2>
+  <p class="lead reveal">One proven backup and one inclusive serve — kept to four items total so the line keeps moving.</p>
+  <div class="cards">
+    <div class="card reveal">
+      <span class="badge ready">Backup · Ready</span>
+      <h3>Espresso Martini</h3>
+      <p>Vodka, coffee liqueur and fresh espresso shaken hard for a dense foam cap, finished with three coffee beans. The room already knows it and loves it — lowest-risk option on the menu.</p>
+    </div>
+    <div class="card reveal">
+      <span class="badge open">Non-Alcoholic · Open Item</span>
+      <h3>Zero-Proof Raspberry Fizz</h3>
+      <p>Concept: raspberry syrup, pineapple juice and soda shaken to echo the French Martini's colour and foam, served in a matching martini glass. <strong style="color:var(--cream)">Pending testing — not yet finalised.</strong> Included so non-drinking partners get equal presentation, not a footnote.</p>
+    </div>
+  </div>
+</section>
+
+<!-- LOGISTICS -->
+<section id="logistics">
+  <div class="section-label reveal">03 — Execution &amp; Logistics</div>
+  <h2 class="reveal">What makes this work on the night</h2>
+  <div class="logi" style="margin-top:2.4rem">
+    <div class="logi-item reveal">
+      <h4>Glassware</h4>
+      <p>Both glass types — stemless rounded rocks and V-bowl martini — are non-standard for a corporate bar. Confirm stock or arrange hire ahead of the event.</p>
+    </div>
+    <div class="logi-item reveal">
+      <h4>Shake discipline</h4>
+      <p>The French Martini's foam collapses under a standard 8–10 second shake at volume. Every bartender briefed: 15–20 seconds, double-strain, no exceptions.</p>
+    </div>
+    <div class="logi-item reveal">
+      <h4>Staffing</h4>
+      <p>One dedicated bartender per 25–30 guests keeps pace with the shake-time requirement without queuing at the bar.</p>
+    </div>
+  </div>
+</section>
+
+<!-- RECOMMENDATION -->
+<section id="recommendation">
+  <div class="reco reveal">
+    <div class="section-label">04 — Recommendation</div>
+    <h2>Approve the four-serve lineup</h2>
+    <p>Two signatures, one proven backup, one inclusive serve pending final testing. Fast to pour, free of fire-safety and specialty-equipment dependencies, and covers every guest in the room.</p>
+    <div class="lineup">
+      <span>Dark Rum Old Fashioned</span>
+      <span>French Martini</span>
+      <span>Espresso Martini</span>
+      <span class="na">Zero-Proof Fizz — pending</span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div>Prepared for PwC Sydney — Partner Welcome Reception</div>
+  <div>Beverage Proposal · 2026</div>
+</footer>
+
+<script>
+/* ---------------- 3D GLASS HERO ---------------- */
+const canvas = document.getElementById('glassCanvas');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
+camera.position.set(0, 1.4, 7.5);
+camera.lookAt(0, 0.4, 0);
+
+/* lighting — warm bar glow */
+scene.add(new THREE.AmbientLight(0xffe7c4, 0.45));
+const key = new THREE.DirectionalLight(0xffd9a0, 1.1); key.position.set(3,5,4); scene.add(key);
+const rim = new THREE.DirectionalLight(0xc2455e, 0.35); rim.position.set(-4,2,-3); scene.add(rim);
+const fill = new THREE.PointLight(0xc98a3d, 0.7, 20); fill.position.set(0,-1,3); scene.add(fill);
+
+const glassMat = new THREE.MeshPhysicalMaterial({
+  color:0xf5efe4, metalness:0, roughness:0.05,
+  transparent:true, opacity:0.18, side:THREE.DoubleSide,
+  clearcoat:1, clearcoatRoughness:0.08
+});
+
+const group = new THREE.Group();
+scene.add(group);
+
+/* ---- Old Fashioned: stemless rounded rocks glass ---- */
+function buildOldFashioned(){
+  const g = new THREE.Group();
+
+  // barrel-shaped glass wall via lathe
+  const pts = [];
+  pts.push(new THREE.Vector2(0.0, 0.0));
+  pts.push(new THREE.Vector2(0.62, 0.02));
+  pts.push(new THREE.Vector2(0.95, 0.28));
+  pts.push(new THREE.Vector2(1.08, 0.85));
+  pts.push(new THREE.Vector2(1.02, 1.5));
+  pts.push(new THREE.Vector2(0.92, 1.95));
+  const glass = new THREE.Mesh(new THREE.LatheGeometry(pts, 48), glassMat);
+  g.add(glass);
+
+  // thick base disc
+  const base = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.6, 0.62, 0.14, 48),
+    new THREE.MeshPhysicalMaterial({color:0xf5efe4, roughness:0.04, transparent:true, opacity:0.35, clearcoat:1})
+  );
+  base.position.y = 0.07;
+  g.add(base);
+
+  // amber liquid
+  const liqPts = [];
+  liqPts.push(new THREE.Vector2(0.0, 0.16));
+  liqPts.push(new THREE.Vector2(0.6, 0.17));
+  liqPts.push(new THREE.Vector2(0.9, 0.32));
+  liqPts.push(new THREE.Vector2(1.0, 0.85));
+  liqPts.push(new THREE.Vector2(0.97, 1.12));
+  liqPts.push(new THREE.Vector2(0.0, 1.12));
+  const liquid = new THREE.Mesh(
+    new THREE.LatheGeometry(liqPts, 48),
+    new THREE.MeshPhysicalMaterial({color:0xB05E1E, transparent:true, opacity:0.85, roughness:0.15})
+  );
+  g.add(liquid);
+
+  // big ice cube
+  const ice = new THREE.Mesh(
+    new THREE.BoxGeometry(0.95,0.95,0.95),
+    new THREE.MeshPhysicalMaterial({color:0xdff1ff, transparent:true, opacity:0.4, roughness:0.06, clearcoat:1})
+  );
+  ice.position.set(0.08, 0.85, 0);
+  ice.rotation.set(0.25, 0.5, 0.12);
+  g.add(ice);
+
+  // orange peel — curved torus segment
+  const peel = new THREE.Mesh(
+    new THREE.TorusGeometry(0.45, 0.055, 12, 40, Math.PI*1.25),
+    new THREE.MeshStandardMaterial({color:0xE07820, roughness:0.5})
+  );
+  peel.position.set(-0.35, 1.25, 0.25);
+  peel.rotation.set(1.1, 0.4, 0.6);
+  g.add(peel);
+
+  g.position.y = -1.0;
+  return g;
+}
+
+/* ---- French Martini: V-cone martini glass ---- */
+function buildFrenchMartini(){
+  const g = new THREE.Group();
+
+  // cone bowl (open lathe)
+  const bowlPts = [
+    new THREE.Vector2(0.02, 1.55),
+    new THREE.Vector2(1.35, 2.85)
+  ];
+  const bowl = new THREE.Mesh(new THREE.LatheGeometry(bowlPts, 56), glassMat);
+  g.add(bowl);
+
+  // stem
+  const stem = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.05, 0.06, 1.5, 24),
+    new THREE.MeshPhysicalMaterial({color:0xf5efe4, roughness:0.04, transparent:true, opacity:0.4, clearcoat:1})
+  );
+  stem.position.y = 0.8;
+  g.add(stem);
+
+  // foot
+  const foot = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.75, 0.85, 0.07, 48),
+    new THREE.MeshPhysicalMaterial({color:0xf5efe4, roughness:0.04, transparent:true, opacity:0.35, clearcoat:1})
+  );
+  foot.position.y = 0.04;
+  g.add(foot);
+
+  // pink liquid cone
+  const liqPts = [
+    new THREE.Vector2(0.02, 1.6),
+    new THREE.Vector2(1.18, 2.62),
+    new THREE.Vector2(0.0, 2.62)
+  ];
+  const liq = new THREE.Mesh(
+    new THREE.LatheGeometry(liqPts, 56),
+    new THREE.MeshPhysicalMaterial({color:0xB2455E, transparent:true, opacity:0.88, roughness:0.2})
+  );
+  g.add(liq);
+
+  // foam cap — flattened disc
+  const foam = new THREE.Mesh(
+    new THREE.CylinderGeometry(1.16, 1.18, 0.1, 56),
+    new THREE.MeshStandardMaterial({color:0xF3E3DB, roughness:0.85})
+  );
+  foam.position.y = 2.66;
+  g.add(foam);
+
+  // raspberries
+  const raspMat = new THREE.MeshStandardMaterial({color:0xB81E3F, roughness:0.6});
+  [[0.12,2.76,0.05],[-0.16,2.75,-0.1],[0.02,2.77,-0.22]].forEach(p=>{
+    const r = new THREE.Mesh(new THREE.SphereGeometry(0.11, 16, 12), raspMat);
+    r.position.set(...p);
+    r.scale.y = 0.85;
+    g.add(r);
+  });
+
+  g.position.y = -1.7;
+  return g;
+}
+
+const ofGlass = buildOldFashioned();
+const fmGlass = buildFrenchMartini();
+fmGlass.visible = false;
+group.add(ofGlass, fmGlass);
+
+/* toggle */
+const btnOF = document.getElementById('btnOF');
+const btnFM = document.getElementById('btnFM');
+function setDrink(of){
+  ofGlass.visible = of; fmGlass.visible = !of;
+  btnOF.classList.toggle('active', of);
+  btnFM.classList.toggle('active', !of);
+  btnOF.setAttribute('aria-selected', of);
+  btnFM.setAttribute('aria-selected', !of);
+}
+btnOF.addEventListener('click', ()=>setDrink(true));
+btnFM.addEventListener('click', ()=>setDrink(false));
+
+/* drag rotate */
+let dragging=false, px=0, py=0, rotY=0, rotX=0, targetY=0, targetX=0;
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+canvas.addEventListener('pointerdown', e=>{dragging=true; px=e.clientX; py=e.clientY;});
+window.addEventListener('pointerup', ()=>dragging=false);
+window.addEventListener('pointermove', e=>{
+  if(!dragging) return;
+  targetY += (e.clientX-px)*0.008;
+  targetX += (e.clientY-py)*0.005;
+  targetX = Math.max(-0.5, Math.min(0.5, targetX));
+  px=e.clientX; py=e.clientY;
+});
+
+function resize(){
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  if(canvas.width!==w||canvas.height!==h){
+    renderer.setSize(w,h,false);
+    camera.aspect = w/h;
+    camera.updateProjectionMatrix();
+  }
+}
+
+function animate(){
+  requestAnimationFrame(animate);
+  resize();
+  if(!dragging && !reduceMotion) targetY += 0.0035; // gentle auto-rotate
+  rotY += (targetY-rotY)*0.08;
+  rotX += (targetX-rotX)*0.08;
+  group.rotation.y = rotY;
+  group.rotation.x = rotX;
+  renderer.render(scene, camera);
+}
+animate();
+
+/* ---------------- scroll reveal ---------------- */
+const io = new IntersectionObserver(entries=>{
+  entries.forEach(en=>{ if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target);} });
+},{threshold:0.12});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
