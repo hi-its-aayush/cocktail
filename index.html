@@ -384,56 +384,97 @@ scene.add(group);
 function buildOldFashioned(){
   const g = new THREE.Group();
 
-  // barrel-shaped glass wall via lathe
-  const pts = [];
-  pts.push(new THREE.Vector2(0.0, 0.0));
-  pts.push(new THREE.Vector2(0.62, 0.02));
-  pts.push(new THREE.Vector2(0.95, 0.28));
-  pts.push(new THREE.Vector2(1.08, 0.85));
-  pts.push(new THREE.Vector2(1.02, 1.5));
-  pts.push(new THREE.Vector2(0.92, 1.95));
-  const glass = new THREE.Mesh(new THREE.LatheGeometry(pts, 48), glassMat);
-  g.add(glass);
-
-  // thick base disc
-  const base = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.6, 0.62, 0.14, 48),
-    new THREE.MeshPhysicalMaterial({color:0xf5efe4, roughness:0.04, transparent:true, opacity:0.35, clearcoat:1})
-  );
-  base.position.y = 0.07;
-  g.add(base);
-
-  // amber liquid
+  // LIQUID FIRST (opaque-ish, renders behind glass wall)
+  // amber liquid — fills lower ~55% of the barrel, follows inner wall
   const liqPts = [];
-  liqPts.push(new THREE.Vector2(0.0, 0.16));
-  liqPts.push(new THREE.Vector2(0.6, 0.17));
-  liqPts.push(new THREE.Vector2(0.9, 0.32));
-  liqPts.push(new THREE.Vector2(1.0, 0.85));
-  liqPts.push(new THREE.Vector2(0.97, 1.12));
-  liqPts.push(new THREE.Vector2(0.0, 1.12));
+  liqPts.push(new THREE.Vector2(0.0, 0.14));
+  liqPts.push(new THREE.Vector2(0.55, 0.15));
+  liqPts.push(new THREE.Vector2(0.86, 0.32));
+  liqPts.push(new THREE.Vector2(1.0, 0.8));
+  liqPts.push(new THREE.Vector2(1.01, 1.1));
+  liqPts.push(new THREE.Vector2(0.0, 1.1)); // flat top surface
   const liquid = new THREE.Mesh(
     new THREE.LatheGeometry(liqPts, 48),
-    new THREE.MeshPhysicalMaterial({color:0xB05E1E, transparent:true, opacity:0.85, roughness:0.15})
+    new THREE.MeshPhysicalMaterial({color:0x8A3D0F, roughness:0.12, clearcoat:0.6, clearcoatRoughness:0.2})
   );
+  liquid.renderOrder = 0;
   g.add(liquid);
 
-  // big ice cube
-  const ice = new THREE.Mesh(
-    new THREE.BoxGeometry(0.95,0.95,0.95),
-    new THREE.MeshPhysicalMaterial({color:0xdff1ff, transparent:true, opacity:0.4, roughness:0.06, clearcoat:1})
+  // darker liquid top surface tint for depth
+  const surface = new THREE.Mesh(
+    new THREE.CircleGeometry(1.0, 48),
+    new THREE.MeshStandardMaterial({color:0x6E2E08, roughness:0.05, metalness:0.1})
   );
-  ice.position.set(0.08, 0.85, 0);
-  ice.rotation.set(0.25, 0.5, 0.12);
+  surface.rotation.x = -Math.PI/2;
+  surface.position.y = 1.101;
+  surface.renderOrder = 0;
+  g.add(surface);
+
+  // BIG ICE CUBE — clearly breaking the liquid surface
+  const ice = new THREE.Mesh(
+    new THREE.BoxGeometry(0.85,0.85,0.85),
+    new THREE.MeshPhysicalMaterial({
+      color:0xEAF6FF, transparent:true, opacity:0.55,
+      roughness:0.05, clearcoat:1, clearcoatRoughness:0.05,
+      depthWrite:false
+    })
+  );
+  ice.position.set(0.05, 1.18, 0);
+  ice.rotation.set(0.3, 0.6, 0.15);
+  ice.renderOrder = 1;
   g.add(ice);
 
-  // orange peel — curved torus segment
-  const peel = new THREE.Mesh(
-    new THREE.TorusGeometry(0.45, 0.055, 12, 40, Math.PI*1.25),
-    new THREE.MeshStandardMaterial({color:0xE07820, roughness:0.5})
+  // inner ice core so it doesn't vanish against liquid
+  const iceCore = new THREE.Mesh(
+    new THREE.BoxGeometry(0.6,0.6,0.6),
+    new THREE.MeshStandardMaterial({color:0xD8EEFF, roughness:0.2, transparent:true, opacity:0.5, depthWrite:false})
   );
-  peel.position.set(-0.35, 1.25, 0.25);
-  peel.rotation.set(1.1, 0.4, 0.6);
+  iceCore.position.copy(ice.position);
+  iceCore.rotation.copy(ice.rotation);
+  iceCore.renderOrder = 1;
+  g.add(iceCore);
+
+  // ORANGE PEEL — draped over the rim edge, partly inside
+  const peelCurve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(-0.55, 1.35, 0.45),
+    new THREE.Vector3(-0.75, 1.75, 0.3),
+    new THREE.Vector3(-0.85, 1.98, 0.0),
+    new THREE.Vector3(-0.7, 1.8, -0.35),
+    new THREE.Vector3(-0.45, 1.5, -0.5)
+  ]);
+  const peel = new THREE.Mesh(
+    new THREE.TubeGeometry(peelCurve, 32, 0.06, 10, false),
+    new THREE.MeshStandardMaterial({color:0xE07820, roughness:0.45})
+  );
+  peel.renderOrder = 1;
   g.add(peel);
+
+  // GLASS WALL LAST — transparent, no depth write so interior shows through
+  const pts = [];
+  pts.push(new THREE.Vector2(0.62, 0.0));
+  pts.push(new THREE.Vector2(0.95, 0.26));
+  pts.push(new THREE.Vector2(1.1, 0.85));
+  pts.push(new THREE.Vector2(1.06, 1.5));
+  pts.push(new THREE.Vector2(0.94, 1.95));
+  const glassWall = new THREE.Mesh(
+    new THREE.LatheGeometry(pts, 48),
+    new THREE.MeshPhysicalMaterial({
+      color:0xF8F3E8, metalness:0, roughness:0.03,
+      transparent:true, opacity:0.12, side:THREE.DoubleSide,
+      clearcoat:1, clearcoatRoughness:0.05, depthWrite:false
+    })
+  );
+  glassWall.renderOrder = 2;
+  g.add(glassWall);
+
+  // thick heavy base — the one visually solid part
+  const base = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.63, 0.66, 0.16, 48),
+    new THREE.MeshPhysicalMaterial({color:0xE8E0D0, roughness:0.03, transparent:true, opacity:0.45, clearcoat:1, depthWrite:false})
+  );
+  base.position.y = 0.06;
+  base.renderOrder = 2;
+  g.add(base);
 
   g.position.y = -1.0;
   return g;
